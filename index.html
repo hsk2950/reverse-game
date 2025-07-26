@@ -55,13 +55,36 @@
       margin: 0 auto;
       background: linear-gradient(to bottom, #6ec6ff 0%, #b3e5fc 50%, #81c784 80%, #4caf50 100%);
     }
+
+    /* ✅ 모바일 하단 동그란 버튼 2개 */
+    .mobile-controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 40px;
+      box-sizing: border-box;
+      z-index: 999;
+    }
+    .mobile-controls button {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 3px solid #fff;
+      cursor: pointer;
+    }
+    .mobile-controls button:active {
+      background: #4caf50;
+    }
   </style>
 </head>
 <body>
   <!-- 시작 화면 -->
   <div class="start-screen" id="startScreen">
     <h2>🦊 레서판다 vs 눈표범 🐆</h2>
-    <p>❗ 반대 방향키로 피하기 (← → ↑)</p>
+    <p>❗ 반대 방향키로 피하기 (← →)</p>
     <div class="btn" id="startBtn" disabled>Loading...</div>
   </div>
 
@@ -80,6 +103,12 @@
   <!-- 게임 캔버스 -->
   <canvas id="gameCanvas" width="720" height="720"></canvas>
 
+  <!-- ✅ 모바일 전용 버튼 (좌/우) -->
+  <div class="mobile-controls" id="mobileControls" style="display:none;">
+    <button id="btnLeft"></button>
+    <button id="btnRight"></button>
+  </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -91,6 +120,10 @@
     const finalTimeDisplay = document.getElementById("finalTime");
     const startBtn = document.getElementById("startBtn");
     const retryBtn = document.getElementById("retryBtn");
+
+    const mobileControls = document.getElementById("mobileControls");
+    const btnLeft = document.getElementById("btnLeft");
+    const btnRight = document.getElementById("btnRight");
 
     // 게임 설정
     const laneWidth = 240;
@@ -109,12 +142,12 @@
     let gameOver = false;
 
     let obstacles = [];
-    let speed = 4;           // 시작 속도 느리게
+    let speed = 4;           // 시작 속도
     let spawnTimer = 0;
     let difficultyTimer = 0;
-    let spawnInterval = 60;  // 60프레임(1초)마다 1개 생성
+    let spawnInterval = 60;  // 1초마다 장애물 생성
 
-    // 같은 레인 연속 2회 방지 기록
+    // 같은 레인 연속 2회 방지
     let lastLane = null;
     let repeatCount = 0;
 
@@ -125,9 +158,9 @@
 
     // 이미지 로드
     const playerImg = new Image();
-    playerImg.src = "player.png";  // 같은 폴더에 레서판다
+    playerImg.src = "player.png";  // 레서판다
     const enemyImg = new Image();
-    enemyImg.src = "enemy.png";    // 같은 폴더에 눈표범
+    enemyImg.src = "enemy.png";    // 눈표범
 
     // 구름
     let clouds = [
@@ -191,14 +224,13 @@
     function spawnObstacle() {
       let randomLane = Math.floor(Math.random() * 3);
 
-      // ✅ 같은 레인 연속 2회 방지
+      // 같은 레인 연속 2회 방지
       if (randomLane === lastLane) {
         repeatCount++;
         if (repeatCount >= 2) {
-          // 강제로 다른 레인 선택
           let availableLanes = [0,1,2].filter(l => l !== lastLane);
           randomLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
-          repeatCount = 0; // 초기화
+          repeatCount = 0;
         }
       } else {
         repeatCount = 0;
@@ -240,7 +272,7 @@
 
     function resetGame() {
       obstacles = [];
-      speed = 4;           // 초기 속도
+      speed = 4;
       spawnTimer = 0;
       difficultyTimer = 0;
       playerLane = 1;
@@ -254,10 +286,11 @@
     function startGame() {
       gameStarted = true;
       resetGame();
-      spawnObstacle(); // 시작하자마자 하나 생성
+      spawnObstacle(); // 시작 시 바로 1개 생성
       startScreen.style.display = "none";
       hud.style.display = "block";
       gameOverScreen.style.display = "none";
+      mobileControls.style.display = "flex"; // 모바일 버튼 표시
       startTimer();
       gameLoop();
     }
@@ -266,6 +299,7 @@
       stopTimer();
       finalTimeDisplay.innerText = `생존 시간: ${survivalTime}초`;
       gameOverScreen.style.display = "block";
+      mobileControls.style.display = "none"; // 게임오버 시 숨김
     }
 
     function gameLoop() {
@@ -285,15 +319,15 @@
         spawnTimer++;
         difficultyTimer++;
 
-        // ✅ 일정 간격으로만 spawn (랜덤X)
+        // 일정 간격으로 spawn
         if (spawnTimer > spawnInterval) {
           spawnObstacle();
           spawnTimer = 0;
         }
 
-        // ✅ 속도는 일정하게 빨라짐
+        // 속도 일정하게 빨라짐
         if (difficultyTimer > 300) {
-          if (speed < 40) speed += 2;  // 일정 주기로 빨라짐
+          if (speed < 40) speed += 2;
           difficultyTimer = 0;
         }
 
@@ -303,18 +337,24 @@
       }
     }
 
-    // 방향키 반대로
+    // 키보드 반대 조작
     document.addEventListener("keydown", (e) => {
-      if (!gameStarted) return;
-      if (gameOver) return;
-
+      if (!gameStarted || gameOver) return;
       if (e.code === "ArrowLeft") {
-        if(playerLane < 2) playerLane++;  // 반대 방향
+        if(playerLane < 2) playerLane++;
       } else if (e.code === "ArrowRight") {
-        if(playerLane > 0) playerLane--;  // 반대 방향
-      } else if (e.code === "ArrowUp") {
-        playerLane = 1;
+        if(playerLane > 0) playerLane--;
       }
+    });
+
+    // ✅ 모바일 버튼 → 반대 방향 이동
+    btnLeft.addEventListener("click", () => {
+      if (!gameStarted || gameOver) return;
+      if(playerLane < 2) playerLane++; // 왼쪽 버튼 = 오른쪽으로 이동
+    });
+    btnRight.addEventListener("click", () => {
+      if (!gameStarted || gameOver) return;
+      if(playerLane > 0) playerLane--; // 오른쪽 버튼 = 왼쪽으로 이동
     });
 
     startBtn.addEventListener("click", () => {
