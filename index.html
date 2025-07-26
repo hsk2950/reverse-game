@@ -2,111 +2,123 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>반응 역전 러너 - 레서판다 vs 눈표범</title>
+  <title>반응 역전 러너 - 모바일 풀스크린</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: 'Press Start 2P', sans-serif;
-      text-align: center;
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background: #111;
+      font-family: 'Press Start 2P', sans-serif;
     }
-    .start-screen, .hud, .gameover-screen {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
+
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
     }
-    .start-screen {
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
-    .hud {
-      top: 10px;
-      background: rgba(0,0,0,0.3);
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-size: 12px;
-      display: none;
-    }
-    .gameover-screen {
-      top: 40%;
-      background: rgba(0,0,0,0.7);
-      padding: 20px;
-      border: 2px solid #fff;
-      border-radius: 8px;
-      display: none;
-    }
-    .btn {
-      margin-top: 10px;
-      display: inline-block;
-      background: #4caf50;
-      color: #fff;
-      padding: 8px 16px;
-      text-decoration: none;
-      cursor: pointer;
-      border-radius: 6px;
-      font-size: 12px;
-    }
+
     canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
       display: block;
-      margin: 0 auto;
       background: linear-gradient(to bottom, #6ec6ff 0%, #b3e5fc 50%, #81c784 80%, #4caf50 100%);
     }
 
-    /* ✅ 모바일 하단 동그란 버튼 2개 */
+    .hud {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.3);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+      color: #fff;
+    }
+
+    .start-screen, .gameover-screen {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+    }
+
+    .start-screen {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .gameover-screen {
+      top: 40%;
+      display: none;
+    }
+
+    .btn {
+      margin-top: 20px;
+      display: inline-block;
+      background: #4caf50;
+      color: #fff;
+      padding: 12px 24px;
+      text-decoration: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    /* ✅ 모바일 버튼 화면 내부 하단 */
     .mobile-controls {
-      position: fixed;
-      bottom: 20px;
+      position: absolute;
+      bottom: 5%;
       width: 100%;
       display: flex;
       justify-content: space-between;
-      padding: 0 40px;
+      padding: 0 15%;
       box-sizing: border-box;
-      z-index: 999;
     }
+
     .mobile-controls button {
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: rgba(255,255,255,0.2);
       border: 3px solid #fff;
       cursor: pointer;
     }
+
     .mobile-controls button:active {
       background: #4caf50;
     }
   </style>
 </head>
 <body>
-  <!-- 시작 화면 -->
-  <div class="start-screen" id="startScreen">
-    <h2>🦊 레서판다 vs 눈표범 🐆</h2>
-    <p>❗ 반대 방향키로 피하기 (← →)</p>
-    <div class="btn" id="startBtn" disabled>Loading...</div>
-  </div>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
 
-  <!-- HUD -->
-  <div class="hud" id="hud">
-    생존 시간: <span id="time">0.0초</span>
-  </div>
+    <div class="hud" id="hud">생존 시간: <span id="time">0.0초</span></div>
 
-  <!-- 게임오버 화면 -->
-  <div class="gameover-screen" id="gameOverScreen">
-    <h2>GAME OVER</h2>
-    <p id="finalTime">생존 시간: 0.0초</p>
-    <div class="btn" id="retryBtn">RETRY</div>
-  </div>
+    <div class="start-screen" id="startScreen">
+      <h2>🦊 레서판다 vs 눈표범 🐆</h2>
+      <p>반대 버튼을 눌러 피하세요!</p>
+      <div class="btn" id="startBtn" disabled>Loading...</div>
+    </div>
 
-  <!-- 게임 캔버스 -->
-  <canvas id="gameCanvas" width="720" height="720"></canvas>
+    <div class="gameover-screen" id="gameOverScreen">
+      <h2>GAME OVER</h2>
+      <p id="finalTime">생존 시간: 0.0초</p>
+      <div class="btn" id="retryBtn">RETRY</div>
+    </div>
 
-  <!-- ✅ 모바일 전용 버튼 (좌/우) -->
-  <div class="mobile-controls" id="mobileControls" style="display:none;">
-    <button id="btnLeft"></button>
-    <button id="btnRight"></button>
+    <div class="mobile-controls" id="mobileControls" style="display:none;">
+      <button id="btnLeft"></button>
+      <button id="btnRight"></button>
+    </div>
   </div>
 
   <script>
@@ -120,56 +132,58 @@
     const finalTimeDisplay = document.getElementById("finalTime");
     const startBtn = document.getElementById("startBtn");
     const retryBtn = document.getElementById("retryBtn");
-
     const mobileControls = document.getElementById("mobileControls");
     const btnLeft = document.getElementById("btnLeft");
     const btnRight = document.getElementById("btnRight");
 
+    // ✅ 기준 해상도 (게임 좌표 고정)
+    const BASE_WIDTH = 720;
+    const BASE_HEIGHT = 1280;
+
     // 게임 설정
-    const laneWidth = 240;
+    const laneWidth = BASE_WIDTH / 3;
     const lanePositions = [
       laneWidth / 2,
       laneWidth + laneWidth / 2,
       laneWidth * 2 + laneWidth / 2
     ];
-    const playerY = 600;
+    const playerY = BASE_HEIGHT - 200;
     const playerWidth = 80;
     const playerHeight = 80;
     const obstacleYStart = -80;
+
+    let scale = 1;
 
     let gameStarted = false;
     let playerLane = 1;
     let gameOver = false;
 
     let obstacles = [];
-    let speed = 4;           // 시작 속도
+    let speed = 4;
     let spawnTimer = 0;
     let difficultyTimer = 0;
-    let spawnInterval = 60;  // 1초마다 장애물 생성
+    let spawnInterval = 60;
 
-    // 같은 레인 연속 2회 방지
     let lastLane = null;
     let repeatCount = 0;
 
-    // 생존 시간
     let startTime = null;
     let survivalTime = 0;
     let timeInterval = null;
 
     // 이미지 로드
     const playerImg = new Image();
-    playerImg.src = "player.png";  // 레서판다
+    playerImg.src = "player.png";
     const enemyImg = new Image();
-    enemyImg.src = "enemy.png";    // 눈표범
+    enemyImg.src = "enemy.png";
 
     // 구름
     let clouds = [
-      {x:100, y:80, speed:0.3},
-      {x:400, y:50, speed:0.2},
-      {x:650, y:120, speed:0.4}
+      {x:100, y:100, speed:0.3},
+      {x:400, y:150, speed:0.2},
+      {x:650, y:200, speed:0.4}
     ];
 
-    // 이미지 로딩 후 START 버튼 활성화
     let assetsLoaded = 0;
     const totalAssets = 2;
     playerImg.onload = () => { assetsLoaded++; if (assetsLoaded === totalAssets) enableStart(); };
@@ -180,25 +194,40 @@
       startBtn.innerText = "START GAME";
     }
 
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // 비율 유지
+      const scaleX = window.innerWidth / BASE_WIDTH;
+      const scaleY = window.innerHeight / BASE_HEIGHT;
+      scale = Math.min(scaleX, scaleY);
+
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
     function drawBackground() {
-      let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+      let gradient = ctx.createLinearGradient(0,0,0,BASE_HEIGHT);
       gradient.addColorStop(0, '#6ec6ff');
       gradient.addColorStop(0.5, '#b3e5fc');
       gradient.addColorStop(0.8, '#81c784');
       gradient.addColorStop(1, '#4caf50');
       ctx.fillStyle = gradient;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillRect(0,0,BASE_WIDTH,BASE_HEIGHT);
 
       ctx.fillStyle = "rgba(255,255,255,0.8)";
       clouds.forEach(cloud=>{
         ctx.beginPath();
-        ctx.arc(cloud.x, cloud.y, 30, 0, Math.PI*2);
-        ctx.arc(cloud.x+40, cloud.y+10, 25, 0, Math.PI*2);
-        ctx.arc(cloud.x-40, cloud.y+10, 25, 0, Math.PI*2);
+        ctx.arc(cloud.x, cloud.y, 40, 0, Math.PI*2);
+        ctx.arc(cloud.x+50, cloud.y+10, 30, 0, Math.PI*2);
+        ctx.arc(cloud.x-50, cloud.y+10, 30, 0, Math.PI*2);
         ctx.fill();
 
         cloud.x += cloud.speed;
-        if(cloud.x>canvas.width+50) cloud.x=-50;
+        if(cloud.x>BASE_WIDTH+50) cloud.x=-50;
       });
     }
 
@@ -206,10 +235,10 @@
       ctx.strokeStyle = "rgba(255,255,255,0.2)";
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(240, 0);
-      ctx.lineTo(240, canvas.height);
-      ctx.moveTo(480, 0);
-      ctx.lineTo(480, canvas.height);
+      ctx.moveTo(laneWidth, 0);
+      ctx.lineTo(laneWidth, BASE_HEIGHT);
+      ctx.moveTo(laneWidth*2, 0);
+      ctx.lineTo(laneWidth*2, BASE_HEIGHT);
       ctx.stroke();
     }
 
@@ -244,7 +273,7 @@
       for (let o of obstacles) {
         o.y += speed;
       }
-      obstacles = obstacles.filter(o => o.y <= canvas.height + 100);
+      obstacles = obstacles.filter(o => o.y <= BASE_HEIGHT + 100);
     }
 
     function checkCollision() {
@@ -286,11 +315,11 @@
     function startGame() {
       gameStarted = true;
       resetGame();
-      spawnObstacle(); // 시작 시 바로 1개 생성
+      spawnObstacle(); 
       startScreen.style.display = "none";
       hud.style.display = "block";
       gameOverScreen.style.display = "none";
-      mobileControls.style.display = "flex"; // 모바일 버튼 표시
+      mobileControls.style.display = "flex"; 
       startTimer();
       gameLoop();
     }
@@ -299,11 +328,11 @@
       stopTimer();
       finalTimeDisplay.innerText = `생존 시간: ${survivalTime}초`;
       gameOverScreen.style.display = "block";
-      mobileControls.style.display = "none"; // 게임오버 시 숨김
+      mobileControls.style.display = "none";
     }
 
     function gameLoop() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.clearRect(0,0,BASE_WIDTH,BASE_HEIGHT);
 
       if (!gameOver) {
         drawBackground();
@@ -319,13 +348,11 @@
         spawnTimer++;
         difficultyTimer++;
 
-        // 일정 간격으로 spawn
         if (spawnTimer > spawnInterval) {
           spawnObstacle();
           spawnTimer = 0;
         }
 
-        // 속도 일정하게 빨라짐
         if (difficultyTimer > 300) {
           if (speed < 40) speed += 2;
           difficultyTimer = 0;
@@ -341,26 +368,25 @@
     document.addEventListener("keydown", (e) => {
       if (!gameStarted || gameOver) return;
       if (e.code === "ArrowLeft") {
-        if(playerLane < 2) playerLane++;
+        if(playerLane < 2) playerLane++; 
       } else if (e.code === "ArrowRight") {
-        if(playerLane > 0) playerLane--;
+        if(playerLane > 0) playerLane--; 
       }
     });
 
-    // ✅ 모바일 버튼 → 반대 방향 이동
+    // 모바일 버튼
     btnLeft.addEventListener("click", () => {
       if (!gameStarted || gameOver) return;
-      if(playerLane < 2) playerLane++; // 왼쪽 버튼 = 오른쪽으로 이동
+      if(playerLane < 2) playerLane++; 
     });
     btnRight.addEventListener("click", () => {
       if (!gameStarted || gameOver) return;
-      if(playerLane > 0) playerLane--; // 오른쪽 버튼 = 왼쪽으로 이동
+      if(playerLane > 0) playerLane--; 
     });
 
     startBtn.addEventListener("click", () => {
       if (!startBtn.disabled) startGame();
     });
-
     retryBtn.addEventListener("click", () => {
       startGame();
     });
