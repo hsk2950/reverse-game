@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>반응 역전 러너 - 모바일 풀스크린</title>
+  <title>반응 역전 러너 - PC/모바일 대응</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -10,23 +10,32 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
       background: #111;
-      font-family: 'Press Start 2P', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
+    /* ✅ PC에서는 고정 비율 유지 */
     .game-container {
       position: relative;
-      width: 100vw;
-      height: 100vh;
       background: #000;
+      width: 100%;
+      height: 100%;
+      max-width: 720px;
+      max-height: 1280px;
+      aspect-ratio: 9 / 16; /* 비율 유지 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     canvas {
       position: absolute;
       top: 0;
       left: 0;
-      display: block;
+      width: 100%;
+      height: 100%;
       background: linear-gradient(to bottom, #6ec6ff 0%, #b3e5fc 50%, #81c784 80%, #4caf50 100%);
     }
 
@@ -72,7 +81,7 @@
       font-size: 14px;
     }
 
-    /* ✅ 모바일 버튼 화면 내부 하단 */
+    /* ✅ 모바일 버튼 게임 내부 하단 */
     .mobile-controls {
       position: absolute;
       bottom: 5%;
@@ -136,11 +145,10 @@
     const btnLeft = document.getElementById("btnLeft");
     const btnRight = document.getElementById("btnRight");
 
-    // ✅ 기준 해상도 (게임 좌표 고정)
+    // ✅ 기준 해상도
     const BASE_WIDTH = 720;
     const BASE_HEIGHT = 1280;
 
-    // 게임 설정
     const laneWidth = BASE_WIDTH / 3;
     const lanePositions = [
       laneWidth / 2,
@@ -171,13 +179,11 @@
     let survivalTime = 0;
     let timeInterval = null;
 
-    // 이미지 로드
     const playerImg = new Image();
     playerImg.src = "player.png";
     const enemyImg = new Image();
     enemyImg.src = "enemy.png";
 
-    // 구름
     let clouds = [
       {x:100, y:100, speed:0.3},
       {x:400, y:150, speed:0.2},
@@ -195,12 +201,15 @@
     }
 
     function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      // PC 웹: 고정 비율 유지, 모바일: 전체화면
+      const container = document.querySelector(".game-container");
+      const rect = container.getBoundingClientRect();
 
-      // 비율 유지
-      const scaleX = window.innerWidth / BASE_WIDTH;
-      const scaleY = window.innerHeight / BASE_HEIGHT;
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      const scaleX = rect.width / BASE_WIDTH;
+      const scaleY = rect.height / BASE_HEIGHT;
       scale = Math.min(scaleX, scaleY);
 
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -253,7 +262,6 @@
     function spawnObstacle() {
       let randomLane = Math.floor(Math.random() * 3);
 
-      // 같은 레인 연속 2회 방지
       if (randomLane === lastLane) {
         repeatCount++;
         if (repeatCount >= 2) {
@@ -364,24 +372,22 @@
       }
     }
 
-    // 키보드 반대 조작
     document.addEventListener("keydown", (e) => {
       if (!gameStarted || gameOver) return;
       if (e.code === "ArrowLeft") {
-        if(playerLane < 2) playerLane++; 
+        if(playerLane < 2) playerLane++;
       } else if (e.code === "ArrowRight") {
-        if(playerLane > 0) playerLane--; 
+        if(playerLane > 0) playerLane--;
       }
     });
 
-    // 모바일 버튼
     btnLeft.addEventListener("click", () => {
       if (!gameStarted || gameOver) return;
-      if(playerLane < 2) playerLane++; 
+      if(playerLane < 2) playerLane++;
     });
     btnRight.addEventListener("click", () => {
       if (!gameStarted || gameOver) return;
-      if(playerLane > 0) playerLane--; 
+      if(playerLane > 0) playerLane--;
     });
 
     startBtn.addEventListener("click", () => {
